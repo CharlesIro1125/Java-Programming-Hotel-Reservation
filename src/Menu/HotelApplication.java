@@ -93,30 +93,33 @@ public class HotelApplication {
                                     System.out.println("\n No Available rooms");
                                     System.out.println("\n Would you like to search for a week ahead?  y/n");
                                     String getresponse = scanner.nextLine().strip();
-                                    while (!getresponse.equals("y") || !getresponse.equals("n")){
-                                        System.out.println("\n Please enter  y/n");
-                                    }
-                                    if(getresponse.equals("y")){
-                                        Calendar calend1 = Calendar.getInstance();
-                                        Calendar calend2 = Calendar.getInstance();
-                                        calend1.setTime(checkInDate);
-                                        calend2.setTime(checkOutDate);
-                                        Instant checkIn = calend1.toInstant();
-                                        Instant checkOut = calend2.toInstant();
-                                        checkIn.plus(Period.ofDays(7));
-                                        checkOut.plus(Period.ofDays(7));
-                                        Date newCheckInDate = Date.from(checkIn);
-                                        Date newCheckOutDate = Date.from(checkOut);
-                                        try {
-                                            findRooms = mainMenu.find_rooms(newCheckInDate, newCheckOutDate);
-                                        }catch (Exception e){
-
+                                    Boolean stepahead = true;
+                                    while (stepahead) {
+                                        if (getresponse.equals("y")) {
+                                            Calendar calend1 = Calendar.getInstance();
+                                            Calendar calend2 = Calendar.getInstance();
+                                            calend1.setTime(checkInDate);
+                                            calend2.setTime(checkOutDate);
+                                            Instant checkIn = calend1.toInstant();
+                                            Instant checkOut = calend2.toInstant();
+                                            checkIn.plus(Period.ofDays(7));
+                                            checkOut.plus(Period.ofDays(7));
+                                            Date newCheckInDate = Date.from(checkIn);
+                                            Date newCheckOutDate = Date.from(checkOut);
+                                            try {
+                                                findRooms = mainMenu.find_rooms(newCheckInDate, newCheckOutDate);
+                                                stepahead = false;
+                                            } catch (Exception e) {
+                                                stepahead = false;
+                                            }
+                                        } else if (getresponse.equals("n")) {
+                                            stepahead = false;
+                                            Menu();
                                         }
-                                    }else if(getresponse.equals("n")){
-                                        Menu();
                                     }
                                 }if(findRooms.isEmpty()){
                                     System.out.println("\n No Available rooms a week ahead");
+                                    Menu();
                                 }
                                 System.out.println("\n Available rooms");
                                 for(IRoom room:findRooms){System.out.println(room);}
