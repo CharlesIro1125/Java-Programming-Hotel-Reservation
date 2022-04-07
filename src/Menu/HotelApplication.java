@@ -6,9 +6,13 @@ import model.Reservations;
 import model.Reservations;
 import model.RoomType;
 
+import java.sql.Time;
 import java.time.Instant;
 import java.time.Period;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
+
+import static java.time.Period.ofDays;
 
 public class HotelApplication {
 
@@ -23,6 +27,8 @@ public class HotelApplication {
     Double roomPrice;
     RoomType roomType;
     List<IRoom> findRooms;
+    Calendar calendar1;
+    Calendar calendar2;
 
     public void Menu() {
         boolean keepRunning = true;
@@ -42,46 +48,46 @@ public class HotelApplication {
 
                         boolean wrongDate = true;
                         while (wrongDate) {
-                            try {
-                                System.out.println("Enter check-in Date mm/dd/yyyy  example: 02/03/2022");
-                                String checkInInput = scanner.nextLine().strip();
-                                Calendar calendar1 = Calendar.getInstance();
-                                int year = Integer.parseInt(checkInInput.substring(6, 9));
-                                int month = Integer.parseInt(checkInInput.substring(0, 2));
-                                int day = Integer.parseInt(checkInInput.substring(3, 5));
-                                calendar1.clear();
-                                calendar1.set(year, month - 1, day);
-                                checkInDate = calendar1.getTime();
-                                Date presentDate = new Date();
-                                Calendar calendar3 = Calendar.getInstance();
-                                calendar3.setTime(presentDate);
-                                presentDate = calendar3.getTime();
-                                System.out.println("present date:  " + presentDate);
-                                System.out.println("checkin date:  " + checkInInput);
-                                //if(presentDate.after(checkInDate)){
-                                //  System.out.println("Enter a date in the future");
-                                // throw new IllegalArgumentException();
-                                //}
-                                System.out.println("Enter check-out Date mm/dd/yyyy  example: 02/03/2022");
-                                String checkOutInput = scanner.nextLine().strip();
-                                Calendar calendar2 = Calendar.getInstance();
-                                year = Integer.parseInt(checkOutInput.substring(6, 9));
-                                month = Integer.parseInt(checkOutInput.substring(0, 2));
-                                day = Integer.parseInt(checkOutInput.substring(3, 5));
-                                calendar2.clear();
-                                calendar2.set(year, month - 1, day);
-                                checkOutDate = calendar2.getTime();
-                                if (checkInDate.after(checkOutDate)) {
-                                    System.out.println("Error: checkOutDate behind checkInDate");
-                                    throw new IllegalArgumentException();
+                            boolean innerdata = true;
+                            while (innerdata) {
+                                try {
+                                    System.out.println("Enter check-in Date mm/dd/yyyy  example: 02/03/2022");
+                                    String checkInInput = scanner.nextLine().strip();
+                                    calendar1 = Calendar.getInstance();
+                                    int year = Integer.parseInt(checkInInput.substring(6, 9));
+                                    int month = Integer.parseInt(checkInInput.substring(0, 2));
+                                    int day = Integer.parseInt(checkInInput.substring(3, 5));
+                                    calendar1.clear();
+                                    calendar1.set(year, month - 1, day);
+                                    checkInDate = calendar1.getTime();
+                                    Date presentDate = new Date();
+                                    Calendar calendar3 = Calendar.getInstance();
+                                    calendar3.setTime(presentDate);
+                                    presentDate = calendar3.getTime();
+                                    System.out.println("present date:  " + presentDate);
+                                    System.out.println("checkin date:  " + checkInInput);
+                                    //if(presentDate.after(checkInDate)){
+                                      //System.out.println("Enter a date in the future");
+                                      //throw new IllegalArgumentException();
+                                    //}
+                                    System.out.println("Enter check-out Date mm/dd/yyyy  example: 02/03/2022");
+                                    String checkOutInput = scanner.nextLine().strip();
+                                    calendar2 = Calendar.getInstance();
+                                    year = Integer.parseInt(checkOutInput.substring(6, 9));
+                                    month = Integer.parseInt(checkOutInput.substring(0, 2));
+                                    day = Integer.parseInt(checkOutInput.substring(3, 5));
+                                    calendar2.clear();
+                                    calendar2.set(year, month - 1, day);
+                                    checkOutDate = calendar2.getTime();
+                                    if (checkInDate.after(checkOutDate)) {
+                                        System.out.println("Error: checkOutDate behind checkInDate");
+                                        throw new IllegalArgumentException();
+                                    }
+
+                                    innerdata = false;
+                                } catch (Exception e) {
+                                    System.out.println("\n Error - Invalid Input \n Please input a correct Date");
                                 }
-
-
-                                System.out.println("checkin Date: " + checkInDate + "checkOut Date: " + checkOutDate);
-
-                            } catch (Exception e) {
-                                System.out.println("\n Error - Invalid Input \n Please input a correct Date");
-
                             }
                                 try {
                                     findRooms = mainMenu.find_rooms(checkInDate,checkOutDate);
@@ -90,43 +96,47 @@ public class HotelApplication {
                                 }
 
                                 if(findRooms.isEmpty()){
-                                    System.out.println("\n No Available rooms");
-                                    System.out.println("\n Would you like to search for a week ahead?  y/n");
-                                    String getresponse = scanner.nextLine().strip();
-                                    Boolean stepahead = true;
-                                    while (stepahead) {
-                                        if (getresponse.equals("y")) {
-                                            Calendar calend1 = Calendar.getInstance();
-                                            Calendar calend2 = Calendar.getInstance();
-                                            calend1.setTime(checkInDate);
-                                            calend2.setTime(checkOutDate);
-                                            Instant checkIn = calend1.toInstant();
-                                            Instant checkOut = calend2.toInstant();
-                                            checkIn.plus(Period.ofDays(7));
-                                            checkOut.plus(Period.ofDays(7));
-                                            Date newCheckInDate = Date.from(checkIn);
-                                            Date newCheckOutDate = Date.from(checkOut);
-                                            try {
-                                                findRooms = mainMenu.find_rooms(newCheckInDate, newCheckOutDate);
-                                                stepahead = false;
-                                            } catch (Exception e) {
-                                                stepahead = false;
-                                            }
-                                        } else if (getresponse.equals("n")) {
-                                            stepahead = false;
+                                    System.out.println("\n No Available rooms for the chosen date : "+ checkInDate + " - "+ checkOutDate);
+                                    Boolean recomm = true;
+                                    while (recomm){
+                                        System.out.println("Would you want to search for one week ahead?  Y/n");
+                                        String recommResp = scanner.nextLine().toLowerCase().strip();
+                                        if(recommResp.equals("y")){
+                                            recomm = false;
+                                        }else if(recommResp.equals("n")){
+                                            recomm = false;
+                                            Menu();
+                                        }else {
+                                            System.out.println("Please enter y or n");
+                                        }
+                                    }
+                                    System.out.println("\n Recommended rooms search.........");
+                                    Instant checkIn = calendar1.toInstant();
+                                    Instant checkOut = calendar2.toInstant();
+                                    checkInDate = Date.from(checkIn.plus(ofDays(7)));
+                                    checkOutDate = Date.from(checkOut.plus(ofDays(7)));
+                                    try {
+                                        findRooms = mainMenu.find_rooms(checkInDate, checkOutDate);
+                                    } catch (Exception e) {
+                                    }
+
+                                }if(findRooms.isEmpty()){
+                                    System.out.println("\n Rooms are all Booked for the next week. \n");
+                                    Thread.sleep(600);
+                                    boolean requestrunning = true;
+                                    while (requestrunning){
+                                        System.out.println(" Enter y to go back to Main menu");
+                                        String response = scanner.nextLine().strip().toLowerCase();
+                                        if(response.equals("y")){
+                                            requestrunning = false;
                                             Menu();
                                         }
                                     }
-                                }if(findRooms.isEmpty()){
-                                    System.out.println("\n No Available rooms a week ahead");
-                                    Menu();
                                 }
                                 System.out.println("\n Available rooms");
                                 for(IRoom room:findRooms){System.out.println(room);}
 
                                 wrongDate = false;
-
-
 
                         }
                         System.out.println("Would you like to book a room?  Y/n");

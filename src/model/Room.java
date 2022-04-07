@@ -1,5 +1,7 @@
 package model;
 
+import java.util.Objects;
+
 public class Room  implements IRoom{
     private String roomNumber = "";
     private Double roomPrice = 0.0;
@@ -10,7 +12,7 @@ public class Room  implements IRoom{
         this.roomNumber = RoomNumber;
         this.roomPrice = RoomPrice;
         this.roomType = roomType;
-        this.available = true;
+        this.available = Boolean.TRUE;
 
     }
 
@@ -36,7 +38,9 @@ public class Room  implements IRoom{
     }
     @Override
     public void setRoomType(RoomType enumeration) {
+
         this.roomType = enumeration;
+
     }
     @Override
     public void setAvailable(boolean val) {
@@ -57,7 +61,7 @@ public class Room  implements IRoom{
             return false;
         }
         Room obj = (Room) other;
-        return this.roomNumber == obj.roomNumber;
+        return Objects.equals(this.roomNumber, obj.roomNumber);
 
     }
     @Override

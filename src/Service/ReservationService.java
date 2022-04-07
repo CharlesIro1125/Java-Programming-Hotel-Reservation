@@ -1,19 +1,20 @@
 package Service;
 
 import model.*;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.time.Period;
+
 import java.util.*;
 import java.util.stream.Stream;
 import model.Room;
 import model.IRoom;
+
 public final class ReservationService {
 
     private static ReservationService reservationService = null;
-    private static Map<String,IRoom> roomStorage;
-    private static Map<String,Reservations> reserveStorage;
+    private static HashMap<String,IRoom> roomStorage;
+    private static HashMap<String,Reservations> reserveStorage;
 
 
     private ReservationService(){}
@@ -44,6 +45,10 @@ public final class ReservationService {
             roomStorage.put(room.getRoomNumber(),room);
         }
     }
+    String reserveKey(String email,String roomNumber,Date checkIn,Date checkOut){
+        return String.format("%s#%s#%s#%s", email,roomNumber,checkIn,checkOut);
+    }
+
     public List<IRoom> getAllRooms(){
         if(!(roomStorage == null)){
             List<IRoom> allRooms = new ArrayList<IRoom>(roomStorage.values());
@@ -65,78 +70,91 @@ public final class ReservationService {
     }
 
     public Reservations reserveARoom(Customer customer, IRoom room, Date checkInDate, Date checkOutDate){
+
+        if(reserveStorage == null){
+            reserveStorage = new HashMap<String,Reservations>();
+        }
         Date presentDate = new Date();
+        Instant instant = Instant.now();
+        Calendar calendar3 = Calendar.getInstance();
+        calendar3.clear();
+
+        calendar3.setTime(presentDate);
+        presentDate = calendar3.getTime();
         if(!(checkReserveStorageNull())) {
             try {
                 for (Reservations reservation : reserveStorage.values()) {
-                    if (presentDate.after(reservation.getCheckOutDate())) {
+                    if ((calendar3.after(reservation.getCheckOutDate()))) {
+                        System.out.println("Avoided area  "+"  presentTime  " + presentDate );
+                        System.out.println("Avoided area  "+"  ChectOutDate  " + reservation.getCheckOutDate() );
                         IRoom room1 = reservation.getRoom();
-                        room1.setAvailable(true);
-                        reserveStorage.remove(reservation.getCustomer().getEmail(), reservation);
+                        room1.setAvailable(Boolean.TRUE);
+
+                        reserveStorage.remove(reserveKey(reservation.getCustomer().getEmail(),
+                        reservation.getRoom().getRoomNumber(),
+                        reservation.getCheckInDate(),reservation.getCheckOutDate()), reservation);
                     }
                 }
             } catch (Exception e) {
             }
         }
-        if(reserveStorage == null){
-            reserveStorage = new HashMap<String,Reservations>();
-        }
-        if(room.isAvailable()){
-            Reservations newReserve = new Reservations(customer,room,checkInDate,checkOutDate);
-            reserveStorage.put(customer.getEmail(), newReserve);
-            room.setAvailable(false);
-            return newReserve;
-        }else {
 
-           System.out.println("Room requested for is not Available");
-           return null;
-        }
+
+        room.setAvailable(false);
+        Reservations newReserve = new Reservations(customer,room,checkInDate,checkOutDate);
+        newReserve.getRoom().setAvailable(false);
+        reserveStorage.put(reserveKey(newReserve.getCustomer().getEmail(),
+                newReserve.getRoom().getRoomNumber(),newReserve.getCheckInDate(),
+                newReserve.getCheckOutDate()), newReserve);
+
+        return newReserve;
 
     }
 
 
     public List<IRoom> findRooms(Date checkInDate, Date checkOutDate) {
+        System.out.println("CheckInDate : " + checkInDate + "   CheckOutDate : " + checkOutDate);
 
 
         try {
-            Set<IRoom> nonAvail = new HashSet<IRoom>();
-            Set<IRoom> allrooms = new HashSet<IRoom>(roomStorage.values());
+            HashSet<IRoom> nonAvail = new HashSet<IRoom>();
+            HashSet<IRoom> allrooms = new HashSet<IRoom>(roomStorage.values());
             if (!(reserveStorage == null)) {
                 for (Reservations reservation : reserveStorage.values()) {
-                    if (reservation.getCheckInDate().before(checkOutDate) && reservation.getCheckOutDate().after(checkInDate)) {
-                        try {
-                            IRoom room = reservation.getRoom();
-                            nonAvail.add(room);
-                        }catch (Exception e){
-
-                        }
-
+                    if (checkInDate.after(reservation.getCheckOutDate()) || checkOutDate.before(reservation.getCheckInDate()) ){
+                        //checkInDate.after(reservation.getCheckOutDate()) || checkOutDate.before(reservation.getCheckInDate())
+                        reservation.getRoom().setAvailable(true);
+                    }else {
+                        IRoom room = reservation.getRoom();
+                        nonAvail.add(room);
                     }
                 }
             }
+            try {
+                allrooms.removeAll(nonAvail);
+            }catch (NullPointerException e){
 
-            allrooms.removeAll(nonAvail);
+            }
+
             List<IRoom> availableRooms = new ArrayList<IRoom>(allrooms);
-
             return availableRooms;
         } catch (UnsupportedOperationException e) {
-            //e.getLocalizedMessage();
+            e.getLocalizedMessage();
             return null;
         }
 
     }
 
     public List<Reservations> getCustomersReservation(Customer customer){
-        if((reserveStorage.containsKey(customer.getEmail()))) {
-            List<Reservations> CustomersReservation = new ArrayList<Reservations>();
-            Reservations custReserve = reserveStorage.get(customer.getEmail());
-            CustomersReservation.add(custReserve);
-            return CustomersReservation;
-        }else {
-            System.out.println(customer + " doesn't exist");
-            return null;
-        }
+        List<Reservations> CustomersReservation = new ArrayList<Reservations>();
+        for(Reservations reservations : reserveStorage.values()) {
+            if (reservations.getCustomer().getEmail().equals(customer.getEmail())) {
+                reservations.getRoom().setAvailable(false);
+                CustomersReservation.add(reservations);
 
+            }
+        }
+        return CustomersReservation;
     }
 
     public List<Reservations> printAllReservation(){

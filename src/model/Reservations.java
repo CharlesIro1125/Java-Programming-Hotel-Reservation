@@ -4,9 +4,9 @@ import java.util.Date;
 
 public class Reservations implements Comparable<Reservations>{
     private Customer customer;
-    private IRoom room;
-    private Date checkInDate;
-    private Date checkOutDate;
+    private  IRoom room;
+    private final Date checkInDate;
+    private final Date checkOutDate;
 
     public Reservations(Customer customer,IRoom room,Date checkInDate,Date checkOutDate){
         this.customer = customer;
